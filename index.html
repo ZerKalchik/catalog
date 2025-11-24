@@ -13,71 +13,99 @@
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: transparent;   /* фон берём от Mottor */
+      background: transparent;
       color: #000;
     }
 
     .catalog-container {
-      max-width: 900px;          /* ширина блока каталога */
-      margin: 0 auto;            /* центрирование */
-      padding: 10px 10px 0;      /* небольшие отступы */
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px 10px 0;
     }
 
     .viewer {
+      position: relative;
       width: 100%;
-      /* больше НЕ используем padding-bottom и позиционирование */
     }
 
     .viewer img {
       width: 100%;
-      height: auto;              /* сохраняем пропорции, без лишнего вертикального места */
+      height: auto;
       display: block;
     }
 
-    .controls {
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 8px 0 16px;       /* отступ над и под кнопками */
-      font-size: 14px;
-    }
-
-    button {
       cursor: pointer;
-      border: 1px solid #ccc;
-      padding: 6px 14px;
-      border-radius: 4px;
-      background: #f5f5f5;
       color: #000;
-      font-size: 14px;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      font-size: 32px;
+      font-weight: 400;
+      background: none;
+      transition: opacity 0.15s ease;
+      user-select: none;
     }
 
-    button:hover {
-      background: #e8e8e8;
-      border-color: #bbb;
+    .nav-arrow.left {
+      left: 0;
     }
 
-    button:disabled {
-      background: #f9f9f9;
-      color: #999;
-      border-color: #eee;
+    .nav-arrow.right {
+      right: 0;
+      transform: translateY(-50%) scaleX(-1);
+    }
+
+    .nav-arrow span {
+      pointer-events: none;
+    }
+
+    .nav-arrow:hover {
+      opacity: 0.8;
+    }
+
+    .nav-arrow.disabled {
+      opacity: 0.2;
       cursor: default;
     }
 
-    .page-indicator {
-      min-width: 80px;
-      text-align: center;
+    .controls {
+      padding: 10px 0 16px;
+    }
+
+    .progress-bar {
+      position: relative;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #eee;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #ffffff, #000000);
+      transition: width 0.6s ease;
     }
 
     @media (max-width: 768px) {
       .catalog-container {
         padding: 8px 8px 0;
       }
-      button {
-        padding: 5px 10px;
-        font-size: 13px;
+
+      .nav-arrow {
+        width: 32px;
+        height: 32px;
+        font-size: 26px;
       }
     }
   </style>
@@ -86,63 +114,203 @@
   <div class="catalog-container">
     <div class="viewer">
       <img id="catalog-page" src="" alt="Каталог" />
-    </div>
-    <div class="controls">
-      <button id="prev-btn">Назад</button>
-      <div class="page-indicator">
-        <span id="current-page">1</span> / <span id="total-pages">1</span>
+
+      <div class="nav-arrow left" id="arrow-left">
+        <span>❮</span>
       </div>
-      <button id="next-btn">Вперёд</button>
+
+      <div class="nav-arrow right" id="arrow-right">
+        <span>❮</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
     </div>
   </div>
 
   <script>
     const pages = [
       "https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-1.png",
-      "https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-2.png",
-	  "https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-3.png",
-      // ... остальные страницы
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-2.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-3.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-4.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-5.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-6.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-7.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-8.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-9.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-10.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-11.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-12.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-13.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-14.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-15.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-16.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-17.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-18.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-19.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-20.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-21.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-22.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-23.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-24.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-25.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-26.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-27.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-28.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-29.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-30.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-31.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-32.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-33.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-34.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-35.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-36.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-37.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-38.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-39.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-40.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-41.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-42.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-43.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-44.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-45.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-46.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-47.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-48.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-49.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-50.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-51.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-52.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-53.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-54.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-55.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-56.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-57.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-58.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-59.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-61.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-62.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-63.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-64.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-65.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-66.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-67.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-69.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-70.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-71.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-72.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-73.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-74.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-75.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-76.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-77.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-78.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-79.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-80.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-81.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-82.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-83.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-84.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-85.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-86.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-87.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-88.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-89.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-90.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-91.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-92.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-93.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-94.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-95.png",
+"https://s3.ru1.storage.beget.cloud/d36c4aee66a8-dmeev/Catalog/PNG/Catalog-96.png",
     ];
 
     const img = document.getElementById("catalog-page");
-    const prevBtn = document.getElementById("prev-btn");
-    const nextBtn = document.getElementById("next-btn");
-    const currentPageEl = document.getElementById("current-page");
-    const totalPagesEl = document.getElementById("total-pages");
+    const arrowLeft = document.getElementById("arrow-left");
+    const arrowRight = document.getElementById("arrow-right");
+    const progressFill = document.getElementById("progress-fill");
 
     let currentIndex = 0;
 
-    function updatePage() {
-      img.src = pages[currentIndex];
-      currentPageEl.textContent = currentIndex + 1;
-      totalPagesEl.textContent = pages.length;
-      prevBtn.disabled = currentIndex === 0;
-      nextBtn.disabled = currentIndex === pages.length - 1;
+    function updateArrows() {
+      if (currentIndex === 0) {
+        arrowLeft.classList.add("disabled");
+      } else {
+        arrowLeft.classList.remove("disabled");
+      }
+
+      if (currentIndex === pages.length - 1) {
+        arrowRight.classList.add("disabled");
+      } else {
+        arrowRight.classList.remove("disabled");
+      }
     }
 
-    prevBtn.addEventListener("click", () => {
+    function updateProgress() {
+      if (pages.length === 0) {
+        progressFill.style.width = "0%";
+        return;
+      }
+
+      const percent = (currentIndex / (pages.length - 1 || 1)) * 100;
+      progressFill.style.width = percent + "%";
+    }
+
+    function updatePage() {
+      img.src = pages[currentIndex];
+      updateArrows();
+      updateProgress();
+    }
+
+    function goPrev() {
       if (currentIndex > 0) {
         currentIndex--;
         updatePage();
       }
-    });
+    }
 
-    nextBtn.addEventListener("click", () => {
+    function goNext() {
       if (currentIndex < pages.length - 1) {
         currentIndex++;
         updatePage();
       }
+    }
+
+    arrowLeft.addEventListener("click", () => {
+      if (!arrowLeft.classList.contains("disabled")) {
+        goPrev();
+      }
+    });
+
+    arrowRight.addEventListener("click", () => {
+      if (!arrowRight.classList.contains("disabled")) {
+        goNext();
+      }
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft") prevBtn.click();
-      if (e.key === "ArrowRight") nextBtn.click();
+      if (e.key === "ArrowLeft") {
+        goPrev();
+      }
+      if (e.key === "ArrowRight") {
+        goNext();
+      }
     });
 
     if (pages.length > 0) {
-      updatePage();
+      currentIndex = 0;
+      img.src = pages[currentIndex];
+      updateArrows();
+      updateProgress();
     } else {
       img.alt = "Нет страниц каталога";
+      arrowLeft.classList.add("disabled");
+      arrowRight.classList.add("disabled");
+      progressFill.style.width = "0%";
     }
   </script>
 </body>
